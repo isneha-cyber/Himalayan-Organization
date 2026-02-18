@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+
+
+@font-face {
+  font-family: 'satoshi';
+  src: url('/src/satoshi/Satoshi-Regular.otf') format('truetype');
+  font-weight: normal;
+}
+
+p{
+  font-family: satoshi;
+}
+
+h1,h2{
+  font-family:Frank Ruhl Libre;
+}
+
+li,a,span{
+  font-family:Montserrat;
+}
