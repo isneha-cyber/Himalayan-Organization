@@ -3,7 +3,7 @@ import Hero from '../components/Hero'
 import About from '../components/About'
 import Sector from '../components/Sector'
 import Message from '../components/Message'
-import Successstories from '../components/Sucessstories'
+// import Successstories from '../components/Sucessstories'
 import Blogs from '../components/Blog'
 
 
@@ -14,7 +14,7 @@ const HomePage = () => {
      <About/>
      <Sector/>
      <Message/>
-     <Successstories/>
+     {/* <Successstories/> */}
      <Blogs/>
 
    </>

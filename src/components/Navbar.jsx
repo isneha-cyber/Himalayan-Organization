@@ -1,278 +1,363 @@
-import { MailIcon, PhoneCall, Menu, X, ChevronDown } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
+import { useLocation, Link } from "react-router-dom";
 
-const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [showTopBar, setShowTopBar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+const navItems = [
+  { label: "Home", href: "/" },
+  {
+    label: "About Us",
+    dropdown: [
+      { label: "About Organization", href: "/about-organization" },
+      { label: "Organization History", href: "/organization-history" },
+      { label: "Corporate Profile", href: "/corporate-profile" },
+      { label: "Chairman's Message ", href: "/message-from-chairman" },
+      { label: "Who We Are", href: "/who-we-are" },
+      { label: "How We Work", href: "/how-we-work" },
+      { label: "FAQ", href: "/faq" },
+    ],
+  },
+  {
+    label: "Business Sector",
+    dropdown: [
+      { label: "Automobile", href: "/auto-mobile" },
+      { label: "Real Estate Housing", href: "/real-estate" },
+      { label: "Hospitality", href: "/hospitality" },
+      { label: "Banking", href: "/banking" },
+      { label: "Agriculture", href: "/agriculture" },
+      { label: "Engineering", href: "/engineering" },
+    ],
+  },
+  { label: "Blog / News", href: "/blog" },
+  { label: "Career", href: "/career" },
+  { label: "Contact", href: "/contact" },
+];
+
+// Scroll to top function
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+};
+
+export default function Navbar() {
   const location = useLocation();
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileDropdown, setMobileDropdown] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  const toggleDropdown = (dropdown) => {
-    setOpenDropdown(openDropdown === dropdown ? null : dropdown);
+  // Determine active item based on current path
+  const getActiveItemFromPath = () => {
+    const currentPath = location.pathname;
+    
+    for (const item of navItems) {
+      if (item.href === currentPath) {
+        return item.label;
+      }
+      if (item.dropdown) {
+        const matchingSubItem = item.dropdown.find(sub => sub.href === currentPath);
+        if (matchingSubItem) {
+          return item.label;
+        }
+      }
+    }
+    return "Home";
   };
 
-  // Close mobile menu and scroll to top when route changes
+  const [activeItem, setActiveItem] = useState(getActiveItemFromPath());
+
+  // Update active item when location changes and scroll to top
   useEffect(() => {
-    setIsMenuOpen(false);
-    setOpenDropdown(null);
-    window.scrollTo(0, 0);
-  }, [location]);
+    setActiveItem(getActiveItemFromPath());
+    setMobileOpen(false);
+    setMobileDropdown(null);
+    scrollToTop(); // Scroll to top on page change
+  }, [location.pathname]);
 
-  // Lock body scroll when mobile menu is open
+  // Handle scroll effects
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isMenuOpen]);
-
-  useEffect(() => {
-    const controlNavbar = () => {
-      // Don't hide navbar when mobile menu is open
-      if (isMenuOpen) return;
-
+    const onScroll = () => {
       const currentScrollY = window.scrollY;
-
+      
+      // Set scrolled state for logo animation
+      setScrolled(currentScrollY > 60);
+      
+      // Hide/show navbar based on scroll direction
       if (currentScrollY < 10) {
-        // At the very top - show both top bar and navbar
-        setShowTopBar(true);
         setShowNavbar(true);
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up - show ONLY navbar, hide top bar
-        setShowTopBar(false);
+        // Scrolling up
         setShowNavbar(true);
       } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down - hide both
-        setShowTopBar(false);
+        // Scrolling down
         setShowNavbar(false);
+        setMobileOpen(false); // Close mobile menu when scrolling down
       }
-
+      
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', controlNavbar);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lastScrollY]);
 
-    return () => {
-      window.removeEventListener('scroll', controlNavbar);
-    };
-  }, [lastScrollY, isMenuOpen]);
-
-  // Handle link click to close mobile menu and scroll to top
-  const handleLinkClick = () => {
-    setIsMenuOpen(false);
-    setOpenDropdown(null);
-    window.scrollTo(0, 0);
+  // Handle parent click for dropdown toggling
+  const handleParentClick = (item) => {
+    setActiveDropdown((prev) => (prev === item.label ? null : item.label));
   };
+
+  // Handle navigation with scroll to top
+  const handleNavigation = (e, item) => {
+    if (location.pathname === item.href) {
+      e.preventDefault();
+      scrollToTop();
+    }
+    setActiveDropdown(null);
+    setMobileOpen(false);
+    setMobileDropdown(null);
+  };
+
+  const activeDropdownItems = navItems.find((n) => n.label === activeDropdown)?.dropdown;
+  
+  // Calculate navbar height for spacer
+  const getNavbarHeight = () => {
+    if (window.innerWidth < 1024) { // mobile
+      return 65; // height of mobile bar
+    }
+    return scrolled ? 57 : 131; // desktop height
+  };
+
+  const [navbarHeight, setNavbarHeight] = useState(131);
+
+  // Update navbar height on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setNavbarHeight(65);
+      } else {
+        setNavbarHeight(scrolled ? 57 : 131);
+      }
+    };
+
+    handleResize(); // Set initial value
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [scrolled]);
 
   return (
     <>
-      {/* Top Bar - Only visible at very top of page */}
-      <div className={`bg-[#131f2f] text-white py-2 px-4 fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
-        showTopBar ? 'translate-y-0' : '-translate-y-full'
-      }`}>
-        <div className="container mx-auto flex justify-end items-center gap-6 text-sm">
-          <div className="flex items-center sm:gap-2">
-            <a href="tel:+9770615238848" className="flex items-center gap-2">
-              <PhoneCall className="text-[#c4a787] w-4 h-4" />
-              <span className="inline text-[10px] lg:text-sm">+977 061-523848</span>
-            </a>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500&display=swap');
+        .nav-item-font { font-family: 'Jost', sans-serif; }
+
+        @keyframes dropIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-bar { animation: dropIn 0.2s ease forwards; }
+
+        .logo-wrap {
+          display: grid;
+          grid-template-rows: 1fr;
+          transition: grid-template-rows 0.35s ease, opacity 0.3s ease;
+          opacity: 1;
+        }
+        .logo-wrap.collapsed { grid-template-rows: 0fr; opacity: 0; }
+        .logo-inner { overflow: hidden; }
+
+        /* Smooth scrolling for the whole page */
+        html {
+          scroll-behavior: smooth;
+        }
+      `}</style>
+
+      {/* ── NAVBAR ── */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 bg-[#131f2f] transition-transform duration-300 ${
+        showNavbar ? 'translate-y-0' : '-translate-y-full'
+      } ${scrolled ? "shadow-2xl" : ""}`}>
+
+        {/* Logo row - Completely hidden on mobile, shown on desktop */}
+        <div className="hidden lg:block">
+          <div className={`logo-wrap ${scrolled ? "collapsed" : ""}`}>
+            <div className="logo-inner border-b border-white/[0.07]">
+              <div className="flex justify-center items-center py-2">
+                <Link to="/" onClick={(e) => handleNavigation(e, { label: "Home", href: "/" })}>
+                  <img src="images/logo2.png" alt="Logo" className="h-16 w-auto object-contain" />
+                </Link>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <a href="mailto:info@grouphimalaya.com" className="flex items-center gap-2">
-              <MailIcon className="text-[#c4a787] w-4 h-4" />
-              <span className="inline text-[10px] lg:text-sm">info@grouphimalaya.com</span>
-            </a>
+
+          {/* Desktop nav row */}
+          <div className="flex justify-center items-stretch border-b border-white/[0.07]">
+            {navItems.map((item) => {
+              const showUnderline = activeItem === item.label;
+              const isOpen = activeDropdown === item.label;
+
+              return (
+                <div key={item.label} className="relative">
+                  {item.dropdown ? (
+                    <button
+                      onClick={() => handleParentClick(item)}
+                      className={`relative nav-item-font text-md tracking-[0.15em] uppercase px-8 py-4 flex items-center gap-1.5 transition-colors duration-200 ${
+                        showUnderline || isOpen ? "text-[#c4a787]" : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {item.label}
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      />
+                      {showUnderline && (
+                        <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#c4a787]" />
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.href}
+                      onClick={(e) => handleNavigation(e, item)}
+                      className={`relative nav-item-font text-md tracking-[0.15em] uppercase px-8 py-4 flex items-center transition-colors duration-200 ${
+                        item.label === "Contact"
+                          ? showUnderline ? "text-white" :  "text-white/70"
+                          : showUnderline
+                          ? "text-[#c4a787]"
+                          : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {item.label}
+                      {showUnderline && (
+                        <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#c4a787]" />
+                      )}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Main Navbar */}
-      <nav className={`bg-white border-b border-gray-200 fixed left-0 right-0 z-40 transition-all duration-300 ${
-        showTopBar ? 'top-[40px]' : 'top-0 shadow-md'
-      } ${showNavbar ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link to="/" onClick={handleLinkClick}>
-                <img 
-                  src="/images/logo2.png" 
-                  alt="Company Logo" 
-                  className="sm:h-20 h-12 w-auto object-contain"
-                />
-              </Link>
-            </div>
-
-            {/* Desktop Menu */}
-            <ul className="hidden lg:flex items-center gap-4 text-sm font-medium uppercase">
-              {/* About Us Dropdown */}
-              <li className="relative group uppercase">
-                <button className="flex items-center gap-1 uppercase text-gray-700 hover:text-[#c4a787] transition-colors duration-200">
-                  About Us
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                <ul className="absolute left-0 top-full mt-2 w-64 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                  <li><Link to="/about-organization" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">About The Organization</Link></li>
-                  <li><Link to="/organization-history" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Organization History</Link></li>
-                  <li><Link to="/corporate-profile" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Corporate Profile</Link></li>
-                  <li><Link to="/message-from-chairman" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Message From the Chairman</Link></li>
-                  <li><Link to="/who-we-are" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Who We Are</Link></li>
-                  <li><Link to="/how-we-work" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">How We Work</Link></li>
-                  <li><Link to="/faq" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">FAQ</Link></li>
-                </ul>
-              </li>
-
-              {/* Business Sector Dropdown */}
-              <li className="relative group">
-                <button className="flex items-center gap-1 text-gray-700 hover:text-[#c4a787] transition-colors duration-200 uppercase">
-                  Business Sector
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                <ul className="absolute left-0 top-full mt-2 w-56 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                  <li><Link to="/auto-mobile" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Automobile</Link></li>
-                  <li><Link to="/real-estate" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Real Estate Housing</Link></li>
-                  <li><Link to="/hospitality" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Hospitality</Link></li>
-                  <li><Link to="/banking" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Banking</Link></li>
-                  <li><Link to="/agriculture" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Agriculture</Link></li>
-                  <li><Link to="/engineering" className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-[#c4a787] transition-colors">Engineering</Link></li>
-                </ul>
-              </li>
-
-              <li>
-                <Link to="/blog" className="text-gray-700 hover:text-[#c4a787] transition-colors duration-200">
-                  Blog/News
-                </Link>
-              </li>
-              <li>
-                <Link to="/career" className="text-gray-700 hover:text-[#c4a787] transition-colors duration-200">
-                  Career
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="bg-[#c4a787] text-white px-4 py-2 rounded-full hover:bg-[#b39676] transition-colors duration-200">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden text-gray-700 hover:text-[#c4a787] transition-colors"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+        {/* Mobile bar - Only visible on mobile */}
+        <div className="lg:hidden flex items-center justify-between px-6 py-2 border-b border-white/[0.07]">
+          <Link to="/" onClick={(e) => handleNavigation(e, { label: "Home", href: "/" })}>
+            <img src="images/logo2.png" alt="Logo" className="h-16 w-auto object-contain" />
+          </Link>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="text-white/70 hover:text-white transition-colors"
+          >
+            {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+          </button>
         </div>
       </nav>
 
-      {/* Mobile Menu - Full Width Overlay */}
-      {isMenuOpen && (
-        <div className={`lg:hidden fixed inset-0 z-30 bg-white transition-all duration-300 ${
-          showTopBar ? 'top-[100px]' : 'top-[80px]'
-        }`}>
-          <div className="h-full overflow-y-auto">
-            <div className="container mx-auto px-4 py-4">
-              <ul className="space-y-2">
-                <li>
-                  <Link 
-                    to="/" 
-                    onClick={handleLinkClick}
-                    className="block py-2 text-gray-700 hover:text-[#c4a787] transition-colors uppercase text-sm font-medium"
-                  >
-                    Home
-                  </Link>
-                </li>
+     {/* ── FULL-WIDTH DROPDOWN BAR - Desktop only ── */}
+{activeDropdownItems && showNavbar && (
+  <div
+    className="fixed left-0 right-0 z-40 bg-[#e8d5bf] border-b border-black/10 dropdown-bar hidden lg:block"
+    style={{ top: `${navbarHeight}px` }}
+  >
+    <div className="h-px bg-gradient-to-r from-transparent via-[#b89a74] to-transparent" />
+    <div className="flex w-full">
+      {activeDropdownItems.map((sub) => (
+        <Link
+          key={sub.label}
+          to={sub.href}
+          onClick={(e) => {
+            handleNavigation(e, sub);
+            setActiveDropdown(null);
+          }}
+          className="group relative flex-1 text-center nav-item-font text-[11px] tracking-[0.15em] uppercase text-[#3a2e22] hover:text-[#131f2f] py-4 px-4 transition-all duration-200 font-medium overflow-hidden"
+        >
+          {/* Hover overlay that expands from center */}
+          <span className="absolute inset-0 bg-black/[0.05] scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center" />
+          
+          {/* Content */}
+          <span className="relative z-10">{sub.label}</span>
+        </Link>
+      ))}
+    </div>
+  </div>
+)}
 
-                {/* Mobile About Us Dropdown */}
-                <li>
-                  <button
-                    onClick={() => toggleDropdown('about')}
-                    className="flex items-center justify-between w-full py-2 text-gray-700 hover:text-[#c4a787] transition-colors uppercase text-sm font-medium"
+      {/* ── MOBILE FULL-SCREEN MENU ── */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-[#131f2f] flex flex-col"
+          style={{ top: "65px" }}
+        >
+          <div className="flex flex-col flex-1 overflow-y-auto">
+            {navItems.map((item) => (
+              <div key={item.label} className="border-b border-white/[0.07]">
+                {item.dropdown ? (
+                  <>
+                    <button
+                      onClick={() =>
+                        setMobileDropdown(mobileDropdown === item.label ? null : item.label)
+                      }
+                      className={`w-full flex items-center justify-between px-8 py-6 nav-item-font text-base tracking-[0.2em] uppercase transition-colors ${
+                        activeItem === item.label ? "text-[#c4a787]" : "text-white/80 hover:text-[#c4a787]"
+                      }`}
+                    >
+                      {item.label}
+                      <ChevronDown
+                        className={`w-5 h-5 transition-transform duration-200 ${
+                          mobileDropdown === item.label ? "rotate-180 text-[#c4a787]" : ""
+                        }`}
+                      />
+                    </button>
+                    {mobileDropdown === item.label && (
+                      <div className="bg-[#e8d5bf] flex flex-col">
+                        {item.dropdown.map((sub) => (
+                          <Link
+                            key={sub.label}
+                            to={sub.href}
+                            onClick={(e) => {
+                              handleNavigation(e, sub);
+                              setMobileOpen(false);
+                              setMobileDropdown(null);
+                              setActiveDropdown(null);
+                            }}
+                            className="px-10 py-4 nav-item-font text-sm tracking-[0.15em] uppercase text-[#3a2e22] hover:text-[#131f2f] hover:bg-black/[0.05] transition-colors border-b border-black/[0.06]"
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={item.href}
+                    onClick={(e) => {
+                      handleNavigation(e, item);
+                      setMobileOpen(false);
+                      setMobileDropdown(null);
+                      setActiveDropdown(null);
+                    }}
+                    className={`flex items-center px-8 py-6 nav-item-font text-base tracking-[0.2em] uppercase transition-colors ${
+                      item.label === "Contact"
+                        ? "text-[#c4a787] hover:text-white"
+                        : activeItem === item.label
+                        ? "text-[#c4a787]"
+                        : "text-white/80 hover:text-[#c4a787]"
+                    }`}
                   >
-                    About Us
-                    <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'about' ? 'rotate-180' : ''}`} />
-                  </button>
-                  {openDropdown === 'about' && (
-                    <ul className="pl-4 mt-2 space-y-2">
-                      <li><Link to="/about-organization" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">About The Organization</Link></li>
-                      <li><Link to="/organization-history" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Organization History</Link></li>
-                      <li><Link to="/corporate-profile" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Corporate Profile</Link></li>
-                      <li><Link to="/message-from-chairman" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Message From the Chairman</Link></li>
-                      <li><Link to="/who-we-are" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Who We Are</Link></li>
-                      <li><Link to="/how-we-work" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">How We Work</Link></li>
-                      <li><Link to="/faq" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">FAQ</Link></li>
-                    </ul>
-                  )}
-                </li>
-
-                {/* Mobile Business Sector Dropdown */}
-                <li>
-                  <button
-                    onClick={() => toggleDropdown('business')}
-                    className="flex items-center justify-between w-full py-2 text-gray-700 hover:text-[#c4a787] transition-colors uppercase text-sm font-medium"
-                  >
-                    Business Sector
-                    <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === 'business' ? 'rotate-180' : ''}`} />
-                  </button>
-                  {openDropdown === 'business' && (
-                    <ul className="pl-4 mt-2 space-y-2">
-                      <li><Link to="/auto-mobile" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Automobile</Link></li>
-                      <li><Link to="/real-estate" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Real Estate Housing</Link></li>
-                      <li><Link to="/hospitality" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Hospitality</Link></li>
-                      <li><Link to="/banking" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Banking</Link></li>
-                      <li><Link to="/agriculture" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Agriculture</Link></li>
-                      <li><Link to="/engineering" onClick={handleLinkClick} className="block py-2 text-gray-600 hover:text-[#c4a787] text-sm">Engineering</Link></li>
-                    </ul>
-                  )}
-                </li>
-
-                <li>
-                  <Link 
-                    to="/blog" 
-                    onClick={handleLinkClick}
-                    className="block py-2 text-gray-700 hover:text-[#c4a787] transition-colors uppercase text-sm font-medium"
-                  >
-                    Blog/News
+                    {item.label}
+                    {activeItem === item.label && item.label !== "Contact" && (
+                      <span className="ml-3 w-6 h-px bg-[#c4a787]" />
+                    )}
                   </Link>
-                </li>
-                <li>
-                  <Link 
-                    to="/career" 
-                    onClick={handleLinkClick}
-                    className="block py-2 text-gray-700 hover:text-[#c4a787] transition-colors uppercase text-sm font-medium"
-                  >
-                    Career
-                  </Link>
-                </li>
-               
-                <li>
-                  <Link 
-                    to="/contact" 
-                    onClick={handleLinkClick}
-                    className="block w-full text-center bg-[#c4a787] text-white px-6 py-2 rounded-md hover:bg-[#b39676] transition-colors uppercase text-sm font-medium mt-4"
-                  >
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Spacer to prevent content jump */}
-      <div className="h-20 sm:h-[120px]"></div>
+      {/* Spacer */}
+      <div style={{ height: `${navbarHeight}px`, transition: "height 0.35s ease" }} />
     </>
   );
-};
-
-export default Navbar;
+}

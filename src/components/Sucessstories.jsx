@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Successstories = () => {
   const stories = [
@@ -26,22 +27,7 @@ const Successstories = () => {
   return (
     <div className="pt-12 md:pt-24 bg-gray-50">
       <div>
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-10 md:mb-16 px-4 md:px-12 gap-6 md:gap-0 ">
-          <div>
-            <h2 className="text-sm md:text-base text-[#c4a787] uppercase tracking-wider mb-3">
-              Success Journey
-            </h2>
-            <h2 className="text-2xl md:text-4xl lg:text-5xl font-light leading-snug">
-              35 Years of Entrepreneurial Excellence
-            </h2>
-          </div>
-
-          <button className="flex items-center gap-2 text-sm md:text-base uppercase tracking-wider border-b border-gray-900 pb-1 hover:text-[#c4a787] hover:border-[#c4a787] transition-colors duration-300 w-fit">
-            Read Full Story
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
+     
 
         {/* Main Story Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -97,10 +83,10 @@ const Successstories = () => {
               </div>
 
               {/* Button */}
-              <button className="flex mb-12 items-center gap-2 text-sm md:text-base uppercase tracking-wider border-b border-white pb-1 group-hover:text-[#c4a787] group-hover:border-[#c4a787] transition-all duration-300 w-fit">
+              {/* <button className="flex mb-12 items-center gap-2 text-sm md:text-base uppercase tracking-wider border-b border-white pb-1 group-hover:text-[#c4a787] group-hover:border-[#c4a787] transition-all duration-300 w-fit">
                 View Full Journey
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
-              </button>
+              </button> */}
             </div>
           </div>
 

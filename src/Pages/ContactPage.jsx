@@ -89,7 +89,7 @@ const ContactPage = () => {
           SECTION 1 — Get in Touch
           Stack on mobile, side-by-side on lg
       ══════════════════════════════════════ */}
-      <section className="flex flex-col lg:flex-row min-h-[600px]">
+      <section className="flex flex-col lg:flex-row md:h-[600px] min-h-[600px]">
 
         {/* Image panel — full image on mobile */}
         <div className="relative w-full lg:w-1/2 h-[300px] sm:h-[400px] lg:min-h-[600px] overflow-hidden">

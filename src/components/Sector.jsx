@@ -13,7 +13,7 @@ const Sector = () => {
 
   return (
     <>
-      <div className="px-6 md:px-12 py-12 md:py-24 ">
+      <div className="px-6 md:px-12 py-12 md:py-24">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className='text-sm md:text-lg text-[#c4a787] uppercase tracking-wider'>Business Sectors</h2>
@@ -99,6 +99,37 @@ const Sector = () => {
 
         </div>
       </div>
+
+      {/* Full Width Fixed Background Image Section */}
+      <div className="relative w-full overflow-hidden">
+        {/* Background Image with fixed positioning on desktop */}
+        <div 
+          className=" hidden md:block w-full h-[800px] bg-fixed bg-center bg-cover bg-no-repeat"
+          style={{ 
+            backgroundImage: "url('images/about1.jpg')",
+            backgroundAttachment: 'fixed'
+          }}
+        >
+         
+        </div>
+           {/* Full Width Image Section */}
+      <div className=" md:hidden block w-full overflow-hidden">
+        <img 
+          className='w-full h-[220px] md:h-[500px] lg:h-[800px] object-cover' 
+          src="images/about1.jpg" 
+          alt="Himalaya Organization" 
+        />
+      </div>
+      </div>
+
+      {/* Mobile fallback - for browsers that don't support bg-fixed well on mobile */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .bg-fixed {
+            background-attachment: scroll;
+          }
+        }
+      `}</style>
     </>
   )
 }
